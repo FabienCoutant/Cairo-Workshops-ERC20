@@ -25,7 +25,7 @@ describe('Test ERC20', function () {
             symbol: starknet.shortStringToBigInt('LINK'),
             decimals: 18,
             initial_supply: { high: 0n, low: 1000n },
-            recipient: BigInt(owner.starknetContract.address), 
+            recipient: BigInt(owner.starknetContract.address),
         })
     })
 
@@ -52,5 +52,28 @@ describe('Test ERC20', function () {
         const {balance : balanceOwner} = await owner.call(ERC20, "balanceOf", {account: owner.address})
         console.log("Balance Owner: ", balanceOwner)
         expect(balanceOwner).to.deep.equal({high: 0n, low: 990n})
+    })
+
+    it('should transferFrom User to Owner by Owner successfully', async () => {
+        await owner.invoke(ERC20, "transfer", {recipient: user.address, amount: {high: 0n, low: 10n} })
+
+        //Check balances before
+        const {balance : balanceUserBefore} = await owner.call(ERC20, "balanceOf", {account: user.address})
+        const {balance : balanceOwnerBefore} = await owner.call(ERC20, "balanceOf", {account: owner.address})
+        console.log("Balance User Before: ", balanceUserBefore)
+        console.log("Balance Owner Before: ", balanceOwnerBefore)
+
+        await user.invoke(ERC20, "increaseAllowance", {spender: owner.address, added_value: {high: 0n, low: 3n} })
+        await owner.invoke(ERC20, "transferFrom", {sender: user.address, recipient: owner.address, amount: {high: 0n, low: 3n} })
+
+        //Check balances after
+        const {balance : balanceUserAfter} = await owner.call(ERC20, "balanceOf", {account: user.address})
+        const {balance : balanceOwnerAfter} = await owner.call(ERC20, "balanceOf", {account: owner.address})
+        console.log("Balance User After: ", balanceUserAfter)
+        console.log("Balance Owner After: ", balanceOwnerAfter)
+
+
+        expect(balanceUserAfter).to.deep.equal({high: 0n, low: 7n})
+
     })
 })
